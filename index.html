@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BaTiO₃钙钛矿晶体结构 - 材料科学可视化</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        /* 修改背景：深色至纯黑渐变，与晶胞边线（青色#4ecdc4）形成强烈对比 */
+        body {
+            background: linear-gradient(135deg, #030307 0%, #0a0a12 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #ff6b6b;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #a5b4fc;
+            margin-bottom: 20px;
+        }
+        
+        .phase-indicator {
+            display: inline-block;
+            padding: 8px 16px;
+            background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+        }
+        
+        .content-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .visualization-section {
+            flex: 1;
+            min-width: 600px;
+            background: rgba(20, 20, 35, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid #2d2d5a;
+        }
+        
+        .info-section {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(20, 20, 35, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid #2d2d5a;
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            color: #4ecdc4;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3a3a5e;
+        }
+        
+        #structure-canvas {
+            width: 100%;
+            height: 550px;
+            border-radius: 10px;
+            background: #010101;  /* 与canvas背景保持一致，深色背景 */
+            overflow: hidden;
+            box-shadow: inset 0 0 25px rgba(0, 0, 0, 0.7);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(15, 15, 30, 0.8);
+            border-radius: 10px;
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .control-title {
+            font-size: 1.1rem;
+            color: #a5b4fc;
+            margin-bottom: 8px;
+        }
+        
+        button {
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:hover {
+            background: linear-gradient(90deg, #44a08d, #4ecdc4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .highlight-btn {
+            background: linear-gradient(90deg, #ff6b6b, #ee5a52);
+            border: 1px solid rgba(255, 107, 107, 0.5);
+        }
+        
+        .highlight-btn:hover {
+            background: linear-gradient(90deg, #ee5a52, #ff6b6b);
+        }
+        
+        .ion-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .ion-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ion-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .ion-label {
+            font-weight: 600;
+        }
+        
+        .octahedron-info {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(15, 15, 30, 0.8);
+            border-radius: 10px;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .octahedron-info h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .octahedron-info ul {
+            padding-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .octahedron-info li {
+            margin-bottom: 8px;
+        }
+        
+        .property-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .property-list li {
+            padding: 12px 0;
+            border-bottom: 1px dashed #3a3a5e;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .property-name {
+            color: #a5b4fc;
+        }
+        
+        .property-value {
+            font-weight: 600;
+            color: #4ecdc4;
+        }
+        
+        .phase-info {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        
+        .phase-info h3 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .phase-diagram {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(15, 15, 30, 0.8);
+            border-radius: 8px;
+        }
+        
+        .phase-stage {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .phase-temperature {
+            width: 100px;
+            font-weight: bold;
+            color: #4ecdc4;
+        }
+        
+        .phase-name {
+            flex: 1;
+            font-weight: bold;
+        }
+        
+        .phase-structure {
+            width: 100px;
+            text-align: right;
+            color: #a5b4fc;
+        }
+        
+        .description {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(15, 15, 30, 0.8);
+            border-radius: 10px;
+            line-height: 1.8;
+        }
+        
+        .description h3 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .description p {
+            margin-bottom: 15px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #3a3a5e;
+            color: #8a8ab5;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 1100px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+            
+            .visualization-section, .info-section {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            #structure-canvas {
+                height: 450px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>BaTiO₃钙钛矿晶体结构</h1>
+            <p class="subtitle">典型铁电材料 | 钙钛矿结构 | 多晶相转变</p>
+            <div class="phase-indicator">当前显示：立方相（顺电相）</div>
+        </header>
+        
+        <div class="content-wrapper">
+            <section class="visualization-section">
+                <h2 class="section-title">BaTiO₃晶体结构三维模型</h2>
+                <div id="structure-canvas"></div>
+                
+                <div class="controls">
+                    <div class="control-group">
+                        <div class="control-title">视图控制</div>
+                        <button id="rotate-toggle">暂停旋转</button>
+                        <button id="reset-view">重置视图</button>
+                        <button id="toggle-axes">显示坐标轴</button>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-title">结构显示</div>
+                        <button id="toggle-octahedra" class="highlight-btn">显示[TiO₆]八面体</button>
+                        <button id="toggle-ti-o-bonds">显示Ti-O键</button>
+                        <button id="toggle-unit-cell">显示晶胞边界</button>
+                    </div>
+                    
+                    <div class="control-group">
+                        <div class="control-title">相变模拟</div>
+                        <button id="cubic-phase">立方相（120°C以上）</button>
+                        <button id="tetragonal-phase">四方相（铁电）</button>
+                        <button id="orthorhombic-phase">斜方相</button>
+                    </div>
+                </div>
+                
+                <div class="ion-legend">
+                    <div class="ion-item">
+                        <div class="ion-color" style="background-color: #ff6b6b;"></div>
+                        <div class="ion-label">Ba²⁺ (钡离子)</div>
+                    </div>
+                    <div class="ion-item">
+                        <div class="ion-color" style="background-color: #4ecdc4;"></div>
+                        <div class="ion-label">Ti⁴⁺ (钛离子)</div>
+                    </div>
+                    <div class="ion-item">
+                        <div class="ion-color" style="background-color: #90be6d;"></div>
+                        <div class="ion-label">O²⁻ (氧离子)</div>
+                    </div>
+                    <div class="ion-item">
+                        <div class="ion-color" style="background-color: rgba(255, 107, 107, 0.3); border: 1px dashed #ff6b6b;"></div>
+                        <div class="ion-label">[TiO₆]八面体</div>
+                    </div>
+                    <div class="ion-item">
+                        <div class="ion-color" style="background-color: rgba(255, 255, 255, 0.5);"></div>
+                        <div class="ion-label">Ti-O键</div>
+                    </div>
+                </div>
+                
+                <div class="octahedron-info">
+                    <h3>BaTiO₃结构特征</h3>
+                    <p><strong>铁电性来源：</strong>Ti⁴⁺在[TiO₆]八面体中偏离中心位置，导致自发极化。</p>
+                    <ul>
+                        <li><strong>居里温度</strong>：120°C（立方相↔四方相转变温度）</li>
+                        <li><strong>自发极化</strong>：四方相中约为26 μC/cm²</li>
+                        <li><strong>介电常数</strong>：室温下高达1000-10000</li>
+                        <li><strong>晶格畸变</strong>：四方相中c/a ≈ 1.01</li>
+                    </ul>
+                </div>
+            </section>
+            
+            <section class="info-section">
+                <h2 class="section-title">结构参数与性质</h2>
+                
+                <ul class="property-list">
+                    <li>
+                        <span class="property-name">化学式:</span>
+                        <span class="property-value">BaTiO₃</span>
+                    </li>
+                    <li>
+                        <span class="property-name">晶系（室温）:</span>
+                        <span class="property-value">四方晶系</span>
+                    </li>
+                    <li>
+                        <span class="property-name">空间群:</span>
+                        <span class="property-value">P4mm (No. 99)</span>
+                    </li>
+                    <li>
+                        <span class="property-name">晶胞参数（室温）:</span>
+                        <span class="property-value">a = 3.994 Å, c = 4.038 Å</span>
+                    </li>
+                    <li>
+                        <span class="property-name">配位数:</span>
+                        <span class="property-value">Ba²⁺:12, Ti⁴⁺:6, O²⁻:6</span>
+                    </li>
+                    <li>
+                        <span class="property-name">密度:</span>
+                        <span class="property-value">6.02 g/cm³</span>
+                    </li>
+                    <li>
+                        <span class="property-name">熔点:</span>
+                        <span class="property-value">1625°C</span>
+                    </li>
+                    <li>
+                        <span class="property-name">介电常数:</span>
+                        <span class="property-value">~1200 (室温, 1kHz)</span>
+                    </li>
+                </ul>
+                
+                <div class="phase-info">
+                    <h3>BaTiO₃相变序列</h3>
+                    <p>BaTiO₃具有丰富的多晶相转变，温度变化时结构发生显著变化：</p>
+                    
+                    <div class="phase-diagram">
+                        <div class="phase-stage">
+                            <div class="phase-temperature">＞120°C</div>
+                            <div class="phase-name">立方相 (Cubic)</div>
+                            <div class="phase-structure">顺电相</div>
+                        </div>
+                        <div class="phase-stage">
+                            <div class="phase-temperature">5-120°C</div>
+                            <div class="phase-name">四方相 (Tetragonal)</div>
+                            <div class="phase-structure">铁电相</div>
+                        </div>
+                        <div class="phase-stage">
+                            <div class="phase-temperature">-90-5°C</div>
+                            <div class="phase-name">斜方相 (Orthorhombic)</div>
+                            <div class="phase-structure">铁电相</div>
+                        </div>
+                        <div class="phase-stage">
+                            <div class="phase-temperature">＜-90°C</div>
+                            <div class="phase-name">三方相 (Rhombohedral)</div>
+                            <div class="phase-structure">铁电相</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="description">
+                    <h3>铁电性质与结构关系</h3>
+                    <p>BaTiO₃是最早发现的铁电钙钛矿材料，其铁电性来源于[TiO₆]八面体中Ti⁴⁺离子的位移。</p>
+                    
+                    <p><strong>立方相（＞120°C）:</strong></p>
+                    <p>• Ti⁴⁺位于八面体中心，结构高度对称</p>
+                    <p>• 无自发极化，为顺电相</p>
+                    
+                    <p><strong>四方相（5-120°C）:</strong></p>
+                    <p>• Ti⁴⁺沿c轴方向位移约0.12 Å</p>
+                    <p>• 晶胞沿c轴伸长，c/a ≈ 1.01</p>
+                    <p>• 产生自发极化，形成电畴</p>
+                    
+                    <p><strong>应用领域:</strong>多层陶瓷电容器(MLCC)、正温度系数热敏电阻(PTCR)、电光器件、铁电存储器等。</p>
+                </div>
+            </section>
+        </div>
+        
+        <footer>
+            <p>材料科学基础 - BaTiO₃钙钛矿晶体结构可视化 | 铁电材料 | 多晶相模拟</p>
+            <p>使用Three.js构建 | 基于钙钛矿结构P4mm空间群 | 居里温度: 120°C</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let scene, camera, renderer, controls;
+        let container = document.getElementById('structure-canvas');
+        let octahedraVisible = true;
+        let tiOBondsVisible = true;
+        let axesVisible = false;
+        let unitCellVisible = true;
+        let autoRotate = true;
+        let currentPhase = 'cubic'; // cubic, tetragonal, orthorhombic
+        
+        // 离子半径 (Å) - BaTiO₃ specific
+        const ionRadii = {
+            Ba: 1.35, // Ba²⁺半径
+            Ti: 0.61, // Ti⁴⁺半径
+            O: 1.40   // O²⁻半径
+        };
+        
+        // 颜色定义
+        const colors = {
+            Ba: 0xff6b6b, // 红色 - Ba²⁺
+            Ti: 0x4ecdc4, // 青色 - Ti⁴⁺
+            O: 0x90be6d,  // 绿色 - O²⁻
+            octahedronFace: 0xff6b6b, // 红色 - 八面体面
+            octahedronEdge: 0xff8e8e, // 亮红色 - 八面体边
+            tiOBond: 0xffffff, // 白色 - Ti-O键
+            unitCellEdge: 0x4ecdc4 // 青色 - 晶胞边
+        };
+        
+        // 晶胞参数 (Å) - 不同相位的参数
+        const latticeConstants = {
+            cubic: { a: 4.00, b: 4.00, c: 4.00 }, // 高温立方相
+            tetragonal: { a: 3.994, b: 3.994, c: 4.038 }, // 室温四方相
+            orthorhombic: { a: 4.00, b: 4.00, c: 4.00 } // 简化斜方相
+        };
+        
+        // Ti⁴⁺位移参数 (Å) - 用于模拟铁电相变
+        const tiDisplacements = {
+            cubic: { x: 0, y: 0, z: 0 },
+            tetragonal: { x: 0, y: 0, z: 0.12 }, // 沿c轴位移
+            orthorhombic: { x: 0.10, y: 0, z: 0 } // 沿a轴位移
+        };
+        
+        // 对象引用
+        let octahedronFaces, octahedronEdges, tiOBonds, baIons = [], tiIon, oIons = [], unitCellEdges;
+        let phaseIndicator = document.querySelector('.phase-indicator');
+        
+        // 初始化场景
+        function init() {
+            // 创建场景 - 背景色改为纯黑，与青色晶胞边线形成强对比
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x010101); // 深黑背景，凸显青色晶胞边线
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(12, 10, 12);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // 添加轨道控制
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.autoRotate = autoRotate;
+            controls.autoRotateSpeed = 1.0;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.minDistance = 5;
+            controls.maxDistance = 50;
+            
+            // 添加光源
+            addLights();
+            
+            // 创建坐标轴
+            createAxes();
+            
+            // 创建优化的晶胞边界
+            createOptimizedUnitCell('cubic');
+            
+            // 创建离子
+            createIons('cubic');
+            
+            // 创建[TiO₆]八面体
+            createTiO6Octahedron('cubic');
+            
+            // 创建Ti-O键
+            createTiOBonds('cubic');
+            
+            // 窗口大小变化响应
+            window.addEventListener('resize', onWindowResize);
+            
+            // 设置控制按钮事件
+            setupControls();
+            
+            // 开始动画循环
+            animate();
+        }
+        
+        // 添加光源
+        function addLights() {
+            // 环境光
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            // 主平行光
+            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
+            directionalLight1.position.set(10, 20, 10);
+            directionalLight1.castShadow = true;
+            scene.add(directionalLight1);
+            
+            // 辅助平行光
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+            directionalLight2.position.set(-10, -10, -10);
+            scene.add(directionalLight2);
+            
+            // 聚光灯 - 聚焦八面体
+            const spotLight = new THREE.SpotLight(0xff6b6b, 0.6, 30, Math.PI / 6, 0.5, 1);
+            spotLight.position.set(5, 10, 5);
+            spotLight.target.position.set(0, 0, 0);
+            scene.add(spotLight);
+            scene.add(spotLight.target);
+        }
+        
+        // 创建坐标轴
+        function createAxes() {
+            const axesHelper = new THREE.AxesHelper(6);
+            axesHelper.visible = axesVisible;
+            scene.add(axesHelper);
+            window.axesHelper = axesHelper;
+        }
+        
+        // 创建优化的晶胞边界
+        function createOptimizedUnitCell(phase) {
+            // 如果已存在，先移除旧的
+            if (unitCellEdges) {
+                scene.remove(unitCellEdges);
+            }
+            
+            const lattice = latticeConstants[phase];
+            
+            // 创建晶胞的12条棱边
+            const edgeGeometry = new THREE.BufferGeometry();
+            const edgeVertices = [];
+            
+            // 立方体顶点坐标（相对中心）
+            const halfA = lattice.a / 2;
+            const halfB = lattice.b / 2;
+            const halfC = lattice.c / 2;
+            
+            const vertices = [
+                [-halfA, -halfB, -halfC], // 0: 左-下-后
+                [halfA, -halfB, -halfC],  // 1: 右-下-后
+                [halfA, halfB, -halfC],   // 2: 右-上-后
+                [-halfA, halfB, -halfC],  // 3: 左-上-后
+                [-halfA, -halfB, halfC],  // 4: 左-下-前
+                [halfA, -halfB, halfC],   // 5: 右-下-前
+                [halfA, halfB, halfC],    // 6: 右-上-前
+                [-halfA, halfB, halfC]    // 7: 左-上-前
+            ];
+            
+            // 立方体的12条棱边
+            const edges = [
+                // 底面的4条边
+                [0, 1], [1, 5], [5, 4], [4, 0],
+                // 顶面的4条边
+                [3, 2], [2, 6], [6, 7], [7, 3],
+                // 垂直的4条边
+                [0, 3], [1, 2], [4, 7], [5, 6]
+            ];
+            
+            // 添加每条边的顶点数据
+            edges.forEach(edge => {
+                const v1 = vertices[edge[0]];
+                const v2 = vertices[edge[1]];
+                
+                edgeVertices.push(
+                    v1[0], v1[1], v1[2],
+                    v2[0], v2[1], v2[2]
+                );
+            });
+            
+            edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgeVertices, 3));
+            
+            const edgeMaterial = new THREE.LineBasicMaterial({
+                color: colors.unitCellEdge,
+                transparent: true,
+                opacity: 0.15,
+                linewidth: 1.5
+            });
+            
+            unitCellEdges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+            unitCellEdges.visible = unitCellVisible;
+            scene.add(unitCellEdges);
+        }
+        
+        // 创建离子
+        function createIons(phase) {
+            // 清除旧的离子
+            if (tiIon) scene.remove(tiIon);
+            oIons.forEach(o => scene.remove(o));
+            baIons.forEach(ba => scene.remove(ba));
+            oIons = [];
+            baIons = [];
+            
+            const lattice = latticeConstants[phase];
+            const displacement = tiDisplacements[phase];
+            
+            // 创建Ti⁴⁺离子 (位于体心，考虑位移)
+            const tiGeometry = new THREE.SphereGeometry(ionRadii.Ti * 0.35, 32, 32);
+            const tiMaterial = new THREE.MeshPhongMaterial({ 
+                color: colors.Ti, 
+                shininess: 120,
+                specular: 0x444444
+            });
+            
+            tiIon = new THREE.Mesh(tiGeometry, tiMaterial);
+            tiIon.position.set(
+                displacement.x,
+                displacement.y,
+                displacement.z
+            );
+            tiIon.castShadow = true;
+            tiIon.receiveShadow = true;
+            scene.add(tiIon);
+            
+            // 创建O²⁻离子 (位于面心)
+            const oGeometry = new THREE.SphereGeometry(ionRadii.O * 0.18, 32, 32);
+            const oMaterial = new THREE.MeshPhongMaterial({ 
+                color: colors.O, 
+                shininess: 100,
+                specular: 0x333333
+            });
+            
+            // 氧离子位置（考虑相变）
+            const oPositions = [
+                [0.5, 0.5, 0], [0.5, 0, 0.5], [0, 0.5, 0.5],
+                [0.5, 0.5, 1], [0.5, 1, 0.5], [1, 0.5, 0.5]
+            ];
+            
+            oPositions.forEach(pos => {
+                const oIon = new THREE.Mesh(oGeometry, oMaterial);
+                oIon.position.set(
+                    (pos[0] - 0.5) * lattice.a,
+                    (pos[1] - 0.5) * lattice.b,
+                    (pos[2] - 0.5) * lattice.c
+                );
+                oIon.castShadow = true;
+                oIon.receiveShadow = true;
+                scene.add(oIon);
+                oIons.push(oIon);
+            });
+            
+            // 创建Ba²⁺离子 (位于立方晶胞顶点)
+            const baGeometry = new THREE.SphereGeometry(ionRadii.Ba * 0.25, 32, 32);
+            const baMaterial = new THREE.MeshPhongMaterial({ 
+                color: colors.Ba, 
+                shininess: 80,
+                specular: 0x222222,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const baPositions = [
+                [0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0],
+                [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]
+            ];
+            
+            baPositions.forEach(pos => {
+                const baIon = new THREE.Mesh(baGeometry, baMaterial);
+                baIon.position.set(
+                    (pos[0] - 0.5) * lattice.a,
+                    (pos[1] - 0.5) * lattice.b,
+                    (pos[2] - 0.5) * lattice.c
+                );
+                baIon.castShadow = true;
+                baIon.receiveShadow = true;
+                scene.add(baIon);
+                baIons.push(baIon);
+            });
+        }
+        
+        // 创建[TiO₆]八面体
+        function createTiO6Octahedron(phase) {
+            // 如果已存在，先移除旧的
+            if (octahedronFaces) scene.remove(octahedronFaces);
+            if (octahedronEdges) scene.remove(octahedronEdges);
+            
+            const lattice = latticeConstants[phase];
+            const displacement = tiDisplacements[phase];
+            
+            // 氧离子位置（八面体顶点）
+            const oxygenPositions = [
+                [0, 0, lattice.c/2],   // 上方氧 (0)
+                [0, 0, -lattice.c/2],  // 下方氧 (1)
+                [0, lattice.b/2, 0],   // 前方氧 (2)
+                [0, -lattice.b/2, 0],  // 后方氧 (3)
+                [lattice.a/2, 0, 0],   // 右方氧 (4)
+                [-lattice.a/2, 0, 0]   // 左方氧 (5)
+            ];
+            
+            // 创建八面体面（半透明）
+            const faceGeometry = new THREE.BufferGeometry();
+            const faceVertices = [];
+            
+            // 八面体有8个三角形面
+            const facesIndices = [
+                [0, 2, 4], [0, 4, 3], [0, 3, 5], [0, 5, 2], // 上半部分
+                [1, 4, 2], [1, 2, 5], [1, 5, 3], [1, 3, 4]  // 下半部分
+            ];
+            
+            facesIndices.forEach(face => {
+                face.forEach(vertexIndex => {
+                    const vertex = oxygenPositions[vertexIndex];
+                    faceVertices.push(vertex[0], vertex[1], vertex[2]);
+                });
+            });
+            
+            faceGeometry.setAttribute('position', new THREE.Float32BufferAttribute(faceVertices, 3));
+            faceGeometry.computeVertexNormals();
+            
+            const faceMaterial = new THREE.MeshPhongMaterial({
+                color: colors.octahedronFace,
+                transparent: true,
+                opacity: 0.2,
+                side: THREE.DoubleSide,
+                shininess: 20
+            });
+            
+            octahedronFaces = new THREE.Mesh(faceGeometry, faceMaterial);
+            octahedronFaces.visible = octahedraVisible;
+            octahedronFaces.position.set(displacement.x, displacement.y, displacement.z);
+            scene.add(octahedronFaces);
+            
+            // 创建八面体边
+            const edgeGeometry = new THREE.BufferGeometry();
+            const edgeVertices = [];
+            
+            // 八面体的12条边
+            const edges = [
+                [0, 2], [0, 4], [0, 3], [0, 5],
+                [1, 2], [1, 4], [1, 3], [1, 5],
+                [2, 4], [4, 3], [3, 5], [5, 2]
+            ];
+            
+            // 调整边在氧离子表面的起点和终点
+            edges.forEach(edge => {
+                const startIndex = edge[0];
+                const endIndex = edge[1];
+                
+                const startPos = new THREE.Vector3(
+                    oxygenPositions[startIndex][0],
+                    oxygenPositions[startIndex][1],
+                    oxygenPositions[startIndex][2]
+                );
+                const endPos = new THREE.Vector3(
+                    oxygenPositions[endIndex][0],
+                    oxygenPositions[endIndex][1],
+                    oxygenPositions[endIndex][2]
+                );
+                
+                const direction = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+                const oxygenRadius = ionRadii.O * 0.18;
+                const adjustedStart = startPos.clone().add(direction.clone().multiplyScalar(oxygenRadius * 0.9));
+                const adjustedEnd = endPos.clone().sub(direction.clone().multiplyScalar(oxygenRadius * 0.9));
+                
+                edgeVertices.push(
+                    adjustedStart.x, adjustedStart.y, adjustedStart.z,
+                    adjustedEnd.x, adjustedEnd.y, adjustedEnd.z
+                );
+            });
+            
+            edgeGeometry.setAttribute('position', new THREE.Float32BufferAttribute(edgeVertices, 3));
+            
+            const edgeMaterial = new THREE.LineBasicMaterial({
+                color: colors.octahedronEdge,
+                linewidth: 2,
+                transparent: true,
+                opacity: 0.7
+            });
+            
+            octahedronEdges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+            octahedronEdges.visible = octahedraVisible;
+            octahedronEdges.position.set(displacement.x, displacement.y, displacement.z);
+            scene.add(octahedronEdges);
+        }
+        
+        // 创建Ti-O键
+        function createTiOBonds(phase) {
+            // 如果已存在，先移除旧的
+            if (tiOBonds) scene.remove(tiOBonds);
+            
+            const lattice = latticeConstants[phase];
+            const displacement = tiDisplacements[phase];
+            
+            // Ti⁴⁺位置（考虑位移）
+            const tiPosition = new THREE.Vector3(displacement.x, displacement.y, displacement.z);
+            
+            // 6个O²⁻位置
+            const oxygenPositions = [
+                new THREE.Vector3(0, 0, lattice.c/2),
+                new THREE.Vector3(0, 0, -lattice.c/2),
+                new THREE.Vector3(0, lattice.b/2, 0),
+                new THREE.Vector3(0, -lattice.b/2, 0),
+                new THREE.Vector3(lattice.a/2, 0, 0),
+                new THREE.Vector3(-lattice.a/2, 0, 0)
+            ];
+            
+            // 创建Ti-O键组
+            const bondGroup = new THREE.Group();
+            
+            oxygenPositions.forEach(oPos => {
+                const direction = new THREE.Vector3().subVectors(oPos, tiPosition);
+                const distance = direction.length();
+                
+                // 创建圆柱体表示Ti-O键
+                const cylinderGeometry = new THREE.CylinderGeometry(
+                    0.04,  // 顶部半径
+                    0.04,  // 底部半径
+                    distance, // 高度
+                    8      // 径向分段数
+                );
+                
+                const cylinderMaterial = new THREE.MeshPhongMaterial({
+                    color: colors.tiOBond,
+                    transparent: true,
+                    opacity: 0.3,
+                    shininess: 30
+                });
+                
+                const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+                
+                // 定位和旋转圆柱体
+                const midPoint = tiPosition.clone().add(oPos).multiplyScalar(0.5);
+                cylinder.position.copy(midPoint);
+                
+                const axis = new THREE.Vector3(0, 1, 0);
+                const quaternion = new THREE.Quaternion();
+                quaternion.setFromUnitVectors(axis, direction.clone().normalize());
+                cylinder.quaternion.copy(quaternion);
+                
+                bondGroup.add(cylinder);
+            });
+            
+            bondGroup.visible = tiOBondsVisible;
+            bondGroup.position.set(0, 0, 0); // 已在计算中考虑位移
+            scene.add(bondGroup);
+            tiOBonds = bondGroup;
+        }
+        
+        // 更新到指定相
+        function updateToPhase(phase) {
+            currentPhase = phase;
+            
+            // 更新相指示器
+            const phaseNames = {
+                cubic: "立方相（顺电相）",
+                tetragonal: "四方相（铁电相）",
+                orthorhombic: "斜方相（铁电相）"
+            };
+            phaseIndicator.textContent = `当前显示：${phaseNames[phase]}`;
+            
+            // 更新所有结构元素
+            createOptimizedUnitCell(phase);
+            createIons(phase);
+            createTiO6Octahedron(phase);
+            createTiOBonds(phase);
+        }
+        
+        // 窗口大小变化响应
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+        
+        // 设置控制按钮事件
+        function setupControls() {
+            // 旋转切换按钮
+            document.getElementById('rotate-toggle').addEventListener('click', function() {
+                autoRotate = !autoRotate;
+                controls.autoRotate = autoRotate;
+                this.textContent = autoRotate ? '暂停旋转' : '开始旋转';
+            });
+            
+            // 重置视图按钮
+            document.getElementById('reset-view').addEventListener('click', function() {
+                controls.reset();
+                camera.position.set(12, 10, 12);
+            });
+            
+            // 坐标轴显示切换按钮
+            document.getElementById('toggle-axes').addEventListener('click', function() {
+                axesVisible = !axesVisible;
+                if (window.axesHelper) {
+                    window.axesHelper.visible = axesVisible;
+                }
+                this.textContent = axesVisible ? '隐藏坐标轴' : '显示坐标轴';
+            });
+            
+            // 八面体显示切换按钮
+            document.getElementById('toggle-octahedra').addEventListener('click', function() {
+                octahedraVisible = !octahedraVisible;
+                if (octahedronFaces) {
+                    octahedronFaces.visible = octahedraVisible;
+                }
+                if (octahedronEdges) {
+                    octahedronEdges.visible = octahedraVisible;
+                }
+                this.textContent = octahedraVisible ? '隐藏[TiO₆]八面体' : '显示[TiO₆]八面体';
+            });
+            
+            // Ti-O键显示切换按钮
+            document.getElementById('toggle-ti-o-bonds').addEventListener('click', function() {
+                tiOBondsVisible = !tiOBondsVisible;
+                if (tiOBonds) {
+                    tiOBonds.visible = tiOBondsVisible;
+                }
+                this.textContent = tiOBondsVisible ? '隐藏Ti-O键' : '显示Ti-O键';
+            });
+            
+            // 晶胞边界显示切换按钮
+            document.getElementById('toggle-unit-cell').addEventListener('click', function() {
+                unitCellVisible = !unitCellVisible;
+                if (unitCellEdges) {
+                    unitCellEdges.visible = unitCellVisible;
+                }
+                this.textContent = unitCellVisible ? '隐藏晶胞边界' : '显示晶胞边界';
+            });
+            
+            // 相变模拟按钮
+            document.getElementById('cubic-phase').addEventListener('click', function() {
+                updateToPhase('cubic');
+            });
+            
+            document.getElementById('tetragonal-phase').addEventListener('click', function() {
+                updateToPhase('tetragonal');
+            });
+            
+            document.getElementById('orthorhombic-phase').addEventListener('click', function() {
+                updateToPhase('orthorhombic');
+            });
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 八面体面的脉动效果
+            if (octahedronFaces && octahedronFaces.visible) {
+                octahedronFaces.material.opacity = 0.15 + 0.05 * Math.sin(Date.now() * 0.001);
+            }
+            
+            // 八面体边的脉动效果
+            if (octahedronEdges && octahedronEdges.visible) {
+                octahedronEdges.material.opacity = 0.6 + 0.2 * Math.sin(Date.now() * 0.001);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
